@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GARA: OPERATIONS_CONTROL</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        :root {
+            --bg: #050505;                
+            --panel: #0c0c0c;             
+            --panel-light: #141414;       
+            --accent: #d4af37;            
+            --text-muted: #777;           
+            --text-bright: #e0e0e0;       
+            --border: #1a1a1a;            
+            --border-focus: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-bright);
+            padding: 25px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+
+        .system-status {
+            font-size: 0.75rem;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 4px 10px;
+        }
+
+        /* Top Control Panel */
+        .deployment-commander {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            padding: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .input-group label {
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+
+        .input-group input {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 10px;
+            font-size: 0.85rem;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .commander-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-gara {
+            background: #111;
+            color: var(--text-bright);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-gara:hover {
+            border-color: #fff;
+            color: #fff;
+        }
+
+        .btn-accent {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-accent:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        /* Operations Grid */
+        .operations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 25px;
+            flex: 1;
+        }
+
+        .operation-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .op-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .op-title {
+            font-size: 1.1rem;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .btn-delete {
+            background: transparent;
+            color: #8c2e2e;
+            border: none;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        .btn-delete:hover {
+            color: #f44336;
+            text-decoration: underline;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-bottom: 15px;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+        }
+
+        .progress-bar-bg {
+            background: var(--bg);
+            height: 4px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .progress-bar-fill {
+            background: var(--accent);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Levels Todo List Layout */
+        .levels-todo-list {
+            border: 1px solid var(--border);
+            background: var(--bg);
+            max-height: 180px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .levels-todo-list::-webkit-scrollbar { width: 4px; }
+        .levels-todo-list::-webkit-scrollbar-track { background: var(--bg); }
+        .levels-todo-list::-webkit-scrollbar-thumb { background: var(--border); }
+
+        .todo-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+
+        .todo-row:last-child {
+            border-bottom: none;
+        }
+
+        .todo-row:hover {
+            background: #090909;
+        }
+
+        .todo-row.selected {
+            background: var(--panel-light);
+            border-left: 2px solid var(--accent);
+        }
+
+        .todo-row input[type="checkbox"] {
+            accent-color: var(--accent);
+            cursor: pointer;
+            width: 14px;
+            height: 14px;
+        }
+
+        .level-text {
+            font-size: 0.85rem;
+            cursor: pointer;
+            flex-grow: 1;
+            user-select: none;
+        }
+
+        .todo-row.completed .level-text {
+            text-decoration: line-through;
+            color: var(--text-muted);
+            opacity: 0.4;
+        }
+
+        /* Inspector panel for Notes */
+        .level-inspector {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 12px;
+            margin-top: auto;
+        }
+
+        .inspector-title {
+            font-size: 0.7rem;
+            color: var(--accent);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .level-notes {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-bright);
+            font-size: 0.8rem;
+            resize: none;
+            height: 50px;
+            outline: none;
+        }
+
+        .level-notes::placeholder {
+            color: #333;
+        }
+
+        #importFile { display: none; }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>GARA // OPERATIONS_LOG</h1>
+        <div class="system-status" id="clock">SYS_STATUS: ACTIVE</div>
+    </header>
+
+    <section class="deployment-commander">
+        <div class="input-group">
+            <label for="opName">Operation / Course Name</label>
+            <input type="text" id="opName" placeholder="Enter operation name...">
+        </div>
+        <div class="input-group" style="max-width: 150px;">
+            <label for="opLevels">Total Levels</label>
+            <input type="number" id="opLevels" min="1" max="100" placeholder="e.g., 32">
+        </div>
+        <div class="commander-actions">
+            <button class="btn-gara btn-accent" onclick="createNewOperation()">[+] Deploy Mission</button>
+            <button class="btn-gara" onclick="exportData()">Export Backup</button>
+            <button class="btn-gara" onclick="document.getElementById('importFile').click()">Import Data</button>
+            <input type="file" id="importFile" accept=".json" onchange="importData(event)">
+        </div>
+    </section>
+
+    <main class="operations-grid" id="operationsGrid">
+    </main>
+
+    <footer>
+        GARA CONTROL PANEL - LOCAL_STORAGE CONSOLE
+    </footer>
+
+    <script>
+        let operations = [];
+
+        window.onload = function() {
+            const savedData = localStorage.getItem('tactical_missions');
+            if (savedData) {
+                operations = JSON.parse(savedData);
+            } else {
+                operations = [
+                    {
+                        id: 'op_' + Date.now(),
+                        name: 'OverTheWire (Bandit)',
+                        totalLevels: 10,
+                        completedLevels: [], 
+                        notes: {}, 
+                        selectedLevel: 1
+                    }
+                ];
+                saveToLocalStorage();
+            }
+            renderDashboard();
+            updateClock();
+            setInterval(updateClock, 1000);
+        };
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = `LOG_TIME: ${now.toLocaleTimeString()}`;
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('tactical_missions', JSON.stringify(operations));
+        }
+
+        function exportData() {
+            if (operations.length === 0) {
+                alert("No current data available to export.");
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(operations));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `gara_missions_backup_${Math.floor(Date.now()/1000)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        if (confirm("Notice: This will overwrite your current active operations. Proceed?")) {
+                            operations = importedData;
+                            saveToLocalStorage();
+                            renderDashboard();
+                        }
+                    } else {
+                        alert("Invalid backup file format.");
+                    }
+                } catch (err) {
+                    alert("Error reading config file.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function createNewOperation() {
+            const nameInput = document.getElementById('opName');
+            const levelsInput = document.getElementById('opLevels');
+            
+            const name = nameInput.value.trim();
+            const totalLevels = parseInt(levelsInput.value);
+
+            if (!name || isNaN(totalLevels) || totalLevels < 1) {
+                alert("Please enter a valid name and total levels.");
+                return;
+            }
+
+            const newOp = {
+                id: 'op_' + Date.now(),
+                name: name,
+                totalLevels: totalLevels,
+                completedLevels: [],
+                notes: {},
+                selectedLevel: 1
+            };
+
+            operations.push(newOp);
+            saveToLocalStorage();
+            renderDashboard();
+            
+            nameInput.value = "";
+            levelsInput.value = "";
+        }
+
+        function deleteOperation(id) {
+            if (confirm("Are you sure you want to permanently delete this mission?")) {
+                operations = operations.filter(op => op.id !== id);
+                saveToLocalStorage();
+                renderDashboard();
+            }
+        }
+
+        function toggleLevel(opId, levelNum) {
+            const op = operations.find(o => o.id === opId);
+            if (!op) return;
+
+            const index = op.completedLevels.indexOf(levelNum);
+            if (index === -1) {
+                op.completedLevels.push(levelNum); 
+            } else {
+                op.completedLevels.splice(index, 1); 
+            }
+            
+            op.selectedLevel = levelNum; 
+            saveToLocalStorage();
+            renderDashboard();
+        }
+
+        function selectLevel(opId, levelNum) {
+            const op = operations.find(o => o.id === opId);
+            if (!op) return;
+            op.selectedLevel = levelNum;
+            saveToLocalStorage();
+            renderDashboard();
+        }
+
+        function updateNotes(opId, levelNum, text) {
+            const op = operations.find(o => o.id === opId);
+            if (!op) return;
+            op.notes[levelNum] = text;
+            saveToLocalStorage();
+        }
+
+        function renderDashboard() {
+            const grid = document.getElementById('operationsGrid');
+            
+            // 1. Capture current scroll positions of all level lists before wiping them
+            const scrollPositions = {};
+            document.querySelectorAll('.operation-card').forEach(card => {
+                const opId = card.getAttribute('data-id');
+                const listEl = card.querySelector('.levels-todo-list');
+                if (opId && listEl) {
+                    scrollPositions[opId] = listEl.scrollTop;
+                }
+            });
+
+            grid.innerHTML = '';
+
+            if (operations.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px; border: 1px dashed var(--border);">No active missions found.</div>`;
+                return;
+            }
+
+            operations.forEach(op => {
+                const progressPercent = Math.round((op.completedLevels.length / op.totalLevels) * 100) || 0;
+
+                const card = document.createElement('div');
+                card.className = `operation-card`;
+                card.setAttribute('data-id', op.id);
+
+                const headerHTML = `
+                    <div class="op-header">
+                        <div class="op-title">${op.name}</div>
+                        <button class="btn-delete" onclick="deleteOperation('${op.id}')">DELETE</button>
+                    </div>
+                `;
+
+                const progressHTML = `
+                    <div class="progress-container">
+                        <div class="progress-text">
+                            <span>Progress: ${op.completedLevels.length}/${op.totalLevels}</span>
+                            <span>${progressPercent}%</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: ${progressPercent}%"></div>
+                        </div>
+                    </div>
+                `;
+
+                let levelsHTML = `<div class="levels-todo-list">`;
+                for (let i = 1; i <= op.totalLevels; i++) {
+                    const isDone = op.completedLevels.includes(i);
+                    const isSelected = op.selectedLevel === i;
+                    const rowClass = `${isDone ? 'completed' : ''} ${isSelected ? 'selected' : ''}`;
+
+                    levelsHTML += `
+                        <div class="todo-row ${rowClass}">
+                            <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleLevel('${op.id}', ${i})">
+                            <span class="level-text" onclick="selectLevel('${op.id}', ${i})">LEVEL_${String(i).padStart(2, '0')}</span>
+                        </div>
+                    `;
+                }
+                levelsHTML += `</div>`;
+
+                const currentSel = op.selectedLevel || 1;
+                const currentNoteText = op.notes[currentSel] || '';
+                const isSelCompleted = op.completedLevels.includes(currentSel);
+
+                const inspectorHTML = `
+                    <div class="level-inspector">
+                        <div class="inspector-title">
+                            <span>Notes: LEVEL_${String(currentSel).padStart(2, '0')}</span>
+                            <span style="color: ${isSelCompleted ? 'var(--accent)' : 'var(--text-muted)'}">
+                                [${isSelCompleted ? 'DONE' : 'PENDING'}]
+                            </span>
+                        </div>
+                        <textarea class="level-notes" 
+                                  placeholder="Enter passwords, flags, or tactical notes here..." 
+                                  oninput="updateNotes('${op.id}', ${currentSel}, this.value)">${currentNoteText}</textarea>
+                    </div>
+                `;
+
+                card.innerHTML = headerHTML + progressHTML + levelsHTML + inspectorHTML;
+                grid.appendChild(card);
+            });
+
+            // 2. Restore the scroll positions immediately after the new HTML finishes mounting
+            document.querySelectorAll('.operation-card').forEach(card => {
+                const opId = card.getAttribute('data-id');
+                const listEl = card.querySelector('.levels-todo-list');
+                if (opId && listEl && scrollPositions[opId] !== undefined) {
+                    listEl.scrollTop = scrollPositions[opId];
+                }
+            });
+        }
+    </script>
+</body>
+</html>
